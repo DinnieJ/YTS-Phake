@@ -91,7 +91,9 @@ extend('min', {
     ValidationProvider,
   },
 
-  middleware: 'isLogin'
+  created() {
+    
+  }
 })
 export default class Login extends Vue {
   [x: string]: any

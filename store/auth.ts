@@ -43,6 +43,7 @@ export const actions: AuthAction<AuthState, RootState> = {
             const { data } = await AuthRepository.login(cred)
             commit(AuthMutation.SET_TOKEN, data.token)
             commit(AuthMutation.SET_USER, data.user)
+            console.log("user from state", data.user)
             setTokenCookie(data.token)
             return true
         } catch (error) {

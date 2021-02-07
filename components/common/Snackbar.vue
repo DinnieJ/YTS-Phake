@@ -31,7 +31,7 @@ import { MutationState } from '@/constants/app.vuex'
       if (mutation.type === MutationState.SHOW_SNACKBAR 
         && state.snackbar.message
         && state.snackbar.color ) {
-        console.log("Show snackbar")
+        this.show = false
         this.message = state.snackbar.message
         this.color = state.snackbar.color
         this.show = true

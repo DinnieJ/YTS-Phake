@@ -53,7 +53,7 @@ export default class Home extends Vue {
   private loading: boolean = true
   $notify: any
   public searchMovie(query: any): void {
-    console.log(query)
+    if(query.trim()) this.$router.push(`/search?keyword=${encodeURI(query.trim())}`)
   }
 
   private async getRandomMovie() {

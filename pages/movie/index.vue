@@ -14,6 +14,7 @@
             v-for="movie in movieList"
             :key="movie.id"
             :movie="movie"
+            :favorite.sync="movie.favorited_by_user"
           >
           </movie-card>
         </v-flex>
@@ -45,18 +46,17 @@ declare module 'vue/types/vue' {
     Pagination,
   },
 
-  async created() {
-    await this.getMoviePagination(this.page)
+  async mounted() {
+    await this.getMovieData()
   },
-
 })
 export default class Movies extends Vue {
   private movieList: any = null
   private totalPage: number = 0
   private page: number = 1
 
-  public async getMoviePagination(page: number) {
-    await MovieRepository.getAllMovies(page)
+  public async getMoviePagination() {
+    await MovieRepository.getAllMovies(this.page)
       .then((response) => {
         this.movieList = response.data.data
         this.totalPage = response.data.total_page
@@ -66,12 +66,35 @@ export default class Movies extends Vue {
       })
   }
 
+  public async getMoviePaginationAuth() {
+    if (this.$store.state.auth.user) {
+      await MovieRepository.getAllMoviesAuth(this.page)
+        .then((response) => {
+          this.movieList = response.data.data
+          this.totalPage = response.data.total_page
+          console.log(this.movieList)
+        })
+        .catch((error) => {
+          console.log(error)
+        })
+    }
+  }
+
+  private async getMovieData(): Promise<any> {
+    if(this.$store.state.auth.user) {
+      await this.getMoviePaginationAuth()
+    } else {
+      await this.getMoviePagination()
+    }
+  }
+
   public scrollToTop(): void {
     this.$vuetify.goTo(0)
   }
+  @Watch('$store.state.auth.user')
   @Watch('page')
-  public async pageChanged(newPage: number) {
-    await this.getMoviePagination(newPage)
+  public async pageChanged() {
+    this.getMovieData()
     this.scrollToTop()
   }
 }

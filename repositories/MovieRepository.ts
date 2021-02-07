@@ -16,10 +16,14 @@ export default class MovieRepository {
     }
 
     public static getMovie(id: number) : Promise<AxiosResponse<any>> {
-        return unauthenticatedService.get(`${Endpoint.Movie}/detail/${id}`)
+        return authenticatedService.get(`${Endpoint.Movie}/detail/${id}`)
     }
 
-    public static getMovieAuth(id: number) : Promise<AxiosResponse<any>> {
-        return authenticatedService.get(`${Endpoint.Movie}/detail/${id}`)
+    public static searchMovies(keyword: any, page:number) : Promise<AxiosResponse<any>> {
+        return authenticatedService.get(`${Endpoint.Movie}/search`, {params: { keyword, page }})
+    }
+
+    public static getUserFavoriteMovies() {
+        return authenticatedService.get(`${Endpoint.Movie}/user-favorite`);
     }
 }

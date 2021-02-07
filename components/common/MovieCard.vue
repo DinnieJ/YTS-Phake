@@ -21,11 +21,11 @@
               <div class="card__title">{{ movie.title }}</div>
             </nuxt-link>
             <div class="card__content">{{ movie.rating }}</div>
-            <v-btn 
-              fab 
+            <v-btn
+              fab
               dark
               v-if="user"
-              :color="favoriteColor.background" 
+              :color="favoriteColor.background"
               :loading="favoriteLoading"
               @click="favoriteMovie"
               ><v-icon :color="favoriteColor.icon">mdi-heart</v-icon></v-btn
@@ -37,54 +37,102 @@
   </v-hover>
 </template>
 <script lang="ts">
-import { Component, Vue, Prop } from 'vue-property-decorator'
-import { unfavoriteBtnColor, favoriteBtnColor } from '@/constants/app.style'
+import { Component, Vue, Prop, PropSync, Watch } from 'vue-property-decorator'
+import {
+  unfavoriteBtnColor,
+  favoriteBtnColor,
+  SnackbarAction,
+} from '@/constants/app.style'
 import { mapGetters } from 'vuex'
 import { Getter } from '@/constants/app.vuex'
+import FavoriteRepository from '@/repositories/FavoriteRepository'
 
 @Component<MovieCard>({
   name: 'MovieCard',
 
   computed: {
     ...mapGetters({
-      user: Getter.USER
-    })
+      user: Getter.USER,
+    }),
+  },
+
+  created() {
+    if (this.asyncFavorited) {
+      this.favoriteColor = favoriteBtnColor
+    } else {
+      this.favoriteColor = unfavoriteBtnColor
+    }
   }
 })
 export default class MovieCard extends Vue {
   @Prop({ required: true }) readonly movie!: any
+  @PropSync('favorite') asyncFavorited!: boolean
 
   private favoriteLoading: boolean = false
-  favorited: boolean = false;
-  private favoriteColor: Object = unfavoriteBtnColor
+  private favoriteColor?: Object
+  $notify: any
 
-  public goToDetail() {
-    this.$router.push(`/detail/${this.movie.id}`)
-  }
 
   public favoriteMovie(): void {
-    if(this.favorited) {
+    if (this.asyncFavorited) {
       this.unlikeMovie()
     } else {
       this.likeMovie()
     }
   }
-  public likeMovie(): void {
-    this.favoriteLoading = true;
-    this.favorited = true;
-    setTimeout(() => {
-      this.favoriteColor = favoriteBtnColor;
-      this.favoriteLoading = false;
-    }, 5)
+
+  public async likeMovie(): Promise<any> {
+    this.favoriteLoading = true
+    await FavoriteRepository.likeMovie(this.movie.id)
+      .then((response) => {
+        this.asyncFavorited = true
+        this.favoriteColor = favoriteBtnColor
+        this.$notify.showMessage({
+          message: `Added ${this.movie.title} to your favorite`,
+          color: SnackbarAction.success,
+        })
+      })
+      .catch((error) => {
+        this.$notify.showMessage({
+          message: `Failed to like movie, please try again later`,
+          color: SnackbarAction.error,
+        })
+      })
+      .finally(() => {
+        this.favoriteLoading = false
+      })
   }
 
-  public unlikeMovie(): void {
-    this.favoriteLoading = true;
-    this.favorited = false;
-    setTimeout(() => {
-      this.favoriteColor = unfavoriteBtnColor;
-      this.favoriteLoading = false;
-    }, 5)
+  public async unlikeMovie(): Promise<any> {
+    this.favoriteLoading = true
+    await FavoriteRepository.dislikeMovie(this.movie.id)
+      .then((response) => {
+        this.asyncFavorited = false
+        this.favoriteColor = unfavoriteBtnColor
+        this.$notify.showMessage({
+          message: `Remove ${this.movie.title} from your favorite`,
+          color: SnackbarAction.success,
+        })
+      })
+      .catch((error) => {
+        this.$notify.showMessage({
+          message: `Failed to dislike movie, please try again later`,
+          color: SnackbarAction.error,
+        })
+        console.log(error.message)
+      })
+      .finally(() => {
+        this.favoriteLoading = false
+      })
+  }
+
+  @Watch('asyncFavorited')
+  public changeBtnColor(val: any) {
+    if (val) {
+      this.favoriteColor = favoriteBtnColor
+    } else {
+      this.favoriteColor = unfavoriteBtnColor
+    }
   }
 }
 </script>

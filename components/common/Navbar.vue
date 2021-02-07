@@ -17,9 +17,9 @@
       </v-btn>
     </v-toolbar-items>
     <v-spacer></v-spacer>
-    <v-btn v-if="user" text small class="login-btn">
+    <v-btn v-if="user" text small class="login-btn" @click="logout">
       <v-icon left dark>mdi-lock-open</v-icon>
-      <span class="hidden-xs-only" @click="logout">Logout</span>
+      <span class="hidden-xs-only">Logout</span>
     </v-btn>
     <v-btn v-else text small class="login-btn" to="/login">
       <v-icon left dark>mdi-lock</v-icon>
@@ -29,9 +29,10 @@
 </template>
 
 <script lang="ts">
-import { Component, Emit, Prop, Vue} from 'vue-property-decorator'
+import { Component, Emit, Prop, Vue } from 'vue-property-decorator'
 import { mapGetters } from 'vuex'
 import { DispatchAction, Getter } from '@/constants/app.vuex'
+import { SnackbarAction } from '@/constants/app.style'
 
 @Component<Navbar>({
   name: 'Navbar',
@@ -47,14 +48,22 @@ export default class Navbar extends Vue {
 
   private appTitle: string = `${process.env.APP_TITLE}`
   @Emit('toggle-drawer')
-  public toggleDrawer(): void {
-  }
+  public toggleDrawer(): void {}
+
+  $notify: any
 
   public async logout(): Promise<void> {
     const isLoggedOut = await this.$store.dispatch(DispatchAction.LOGOUT)
-    if(isLoggedOut) {
-      alert('Successful logged out')
+    if (!isLoggedOut) {
+      this.$store.dispatch(DispatchAction.CLEAR_AUTH)
     }
+
+    this.$notify.showMessage({
+      message: `Logged out successful`,
+      color: SnackbarAction.success,
+    })
+
+    this.$router.push('/')
   }
 }
 </script>

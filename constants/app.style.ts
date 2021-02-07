@@ -10,5 +10,6 @@ export const favoriteBtnColor = {
 
 export enum SnackbarAction {
     success = "green lighten-3",
-    error = "red darken-3"
+    error = "red darken-3",
+    process = "blue lighten-2"
 }
